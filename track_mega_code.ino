@@ -368,20 +368,6 @@ void keypadEvent(KeypadEvent key)
                     lcd.print("door closed   ");
                 }
             }
-            // switch (key)
-            // {
-            // case '#':
-            //     longPress = true; // 비밀번호 변경코드 진입
-            //     key = '\0';       // 입력된 '#' 삭제 - 오류방지
-            //     codeIndex = 0;
-            //     Serial.println("set pass in");
-            //     lcd.setCursor(0, 0);
-            //     lcd.print("Room Number: "); // 키 홀드 시간 설정 - 2000 = 2초
-            //     lcd.setCursor(13, 0);
-            //     lcd.print("   ");
-            //     break;
-            // }
-            // break; // HOLD 종료
         }
     }
 }
