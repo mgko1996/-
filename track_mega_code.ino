@@ -71,18 +71,6 @@ void setup()
 
 void loop()
 {
-    lcd.print("Room Number: ");
-    lcd.setCursor(13, 0);
-    if (doorOpen)
-    {
-        lcd.setCursor(0, 1);
-        lcd.print("door open    ");
-    }
-    else
-    {
-        lcd.setCursor(0, 1);
-        lcd.print("door closed   ");
-    }
 
     char key = keypad.getKey();
     if (longPress)
@@ -91,6 +79,19 @@ void loop()
         {
             if (key != '*' && key != '#' && codeIndex < 3)
             { // 숫자이면, 3자리 이상 무시
+                lcd.setCursor(0, 0);
+                lcd.print("Room Number: ");
+                lcd.setCursor(13, 0);
+                if (doorOpen)
+                {
+                    lcd.setCursor(0, 1);
+                    lcd.print("door open    ");
+                }
+                else
+                {
+                    lcd.setCursor(0, 1);
+                    lcd.print("door closed   ");
+                }
                 Serial.print("pass set key: ");
                 Serial.println(key);
                 temp[codeIndex] = key;
@@ -113,7 +114,7 @@ void loop()
                 digitalWrite(5, HIGH);
                 digitalWrite(6, HIGH);
                 digitalWrite(7, HIGH);
-                off_time = millis() + 3000;
+                off_time = millis() + 30000;
                 myservo.write(0);
                 kmg = false;
                 digitalWrite(3, HIGH);
@@ -128,8 +129,8 @@ void loop()
 
             else if (key == '*')
             { // 입력값 초기화
-                lcd.setCursor(13, 0);
-                lcd.print("      ");
+                 lcd.setCursor(13, 0);
+                 lcd.print("      ");
                 for (int i = 0; i < 3; i++)
                     temp[i] = '0';
                 key = '\0'; // 입력된 '#' 삭제 - 오류방지
@@ -143,15 +144,30 @@ void loop()
         if (key)
         {
             if (key != '*' && key != '#' && doorOpen == true)
-            { // 숫자만 입력
+            {   // 숫자만 입력
+                // lcd.setCursor(0, 0);
+                // lcd.print("Room Number: ");
+                lcd.setCursor(0, 0);
+                lcd.print("Press # for 1s             ");
+                lcd.setCursor(13, 0);
+                if (doorOpen)
+                {
+                    lcd.setCursor(0, 1);
+                    lcd.print("door open    ");
+                }
+                else
+                {
+                    lcd.setCursor(0, 1);
+                    lcd.print("door closed   ");
+                }
                 Serial.print("key: ");
                 Serial.println(key);
-                lcd.setCursor(0, 0);
-                lcd.print("                         ");
-                lcd.print("Room Number: "); // 키 홀드 시간 설정 - 2000 = 2초
+                // lcd.setCursor(0, 0);
+                // // lcd.print("                         ");
+                // lcd.print("Room Number: "); // 키 홀드 시간 설정 - 2000 = 2초
                 inputCode[codeIndex] = key;
-                lcd.setCursor(13 + codeIndex, 0);
-                lcd.print(key);
+                //lcd.setCursor(13 + codeIndex, 0);
+                //lcd.print(key);
                 codeIndex++;
                 if (codeIndex == 3)
                 {
@@ -187,8 +203,8 @@ void loop()
             }
             else if (key == '*')
             { // 입력값 초기화
-                lcd.setCursor(13, 0);
-                lcd.print("      ");
+                //lcd.setCursor(13, 0);
+                //lcd.print("      ");
                 Serial.println("CLEAR");
                 for (int i = 0; i < 3; i++)
                     inputCode[i] = '0';
@@ -244,8 +260,8 @@ void loop()
                 }
                 noTone(piezo);
                 delay(500);
-                lcd.setCursor(13, 0);
-                lcd.print("      ");
+                lcd.setCursor(0, 0);
+                lcd.print("Press # for 1s               ");
             }
             else if (password[0] == '3' && password[1] == '0' && password[2] == '1' && result == "ba 6d 3d 29" && !kmg)
             {
@@ -267,8 +283,8 @@ void loop()
                 }
                 noTone(piezo);
                 delay(500);
-                lcd.setCursor(13, 0);
-                lcd.print("      ");
+                lcd.setCursor(0, 0);
+                lcd.print("Press # for 1s               ");
             }
             if (result == "c7 71 22 19" && kmg)
             {
@@ -290,8 +306,8 @@ void loop()
                 }
                 noTone(piezo);
                 delay(500);
-                lcd.setCursor(13, 0);
-                lcd.print("      ");
+                lcd.setCursor(0, 0);
+                lcd.print("Press # for 1s               ");
             }
             else if (result == "c7 71 22 19" && !kmg)
             {
@@ -313,8 +329,8 @@ void loop()
                 }
                 noTone(piezo);
                 delay(500);
-                lcd.setCursor(13, 0);
-                lcd.print("      ");
+                lcd.setCursor(0, 0);
+                lcd.print("Press # for 1s               ");
             }
         }
     }
@@ -361,14 +377,8 @@ void keypadEvent(KeypadEvent key)
             }
             else
             {
-                lcd.print(password[0]);
-                lcd.setCursor(14, 0);
-                lcd.print(password[1]);
-                lcd.setCursor(15, 0);
-                lcd.print(password[2]);
                 lcd.setCursor(0, 0);
-                lcd.print("Room Number: ");
-                lcd.setCursor(13, 0);
+                lcd.print("Press # for 1s            ");
                 if (doorOpen)
                 {
                     lcd.setCursor(0, 1);
