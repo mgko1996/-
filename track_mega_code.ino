@@ -71,6 +71,18 @@ void setup()
 
 void loop()
 {
+    lcd.print("Room Number: ");
+    lcd.setCursor(13, 0);
+    if (doorOpen)
+    {
+        lcd.setCursor(0, 1);
+        lcd.print("door open    ");
+    }
+    else
+    {
+        lcd.setCursor(0, 1);
+        lcd.print("door closed   ");
+    }
 
     char key = keypad.getKey();
     if (longPress)
@@ -329,7 +341,7 @@ void loop()
 }
 
 void keypadEvent(KeypadEvent key)
-{ 
+{
     if (doorOpen == true)
     { // 문 열린 상태에서 키패드 이벤트 진입
         switch (keypad.getState())
@@ -349,14 +361,14 @@ void keypadEvent(KeypadEvent key)
             }
             else
             {
-                lcd.setCursor(0, 0);
-                lcd.print("Room Number: ");
-                lcd.setCursor(13, 0);
                 lcd.print(password[0]);
                 lcd.setCursor(14, 0);
                 lcd.print(password[1]);
                 lcd.setCursor(15, 0);
                 lcd.print(password[2]);
+                lcd.setCursor(0, 0);
+                lcd.print("Room Number: ");
+                lcd.setCursor(13, 0);
                 if (doorOpen)
                 {
                     lcd.setCursor(0, 1);
