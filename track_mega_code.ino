@@ -29,7 +29,7 @@ Servo myservo;
 MFRC522 rfid(SDA_PIN, RST_PIN);
 
 bool longPress = false; // 키패드 이벤트용 및 계속점멸 longPress 플래그
-bool doorOpen = true;
+bool doorOpen = false;
 char temp[4] = {
     0,
 }; // 비밀번호 설정시 임시 저장변수
@@ -42,6 +42,7 @@ int piezo = 2;
 int tones[] = {523, 587, 659, 698, 784, 880, 988, 1046};
 
 bool kmg;
+bool kmg_first = false;
 
 unsigned long off_time = 0;
 
@@ -54,15 +55,18 @@ void setup()
     rfid.PCD_Init();
     lcd.init();
     lcd.backlight();
-    lcd.print("Press # for 1s");
+    lcd.print("put the master");
+
+    //잠금장치 담당하는 서보 잠궈놔라 명기야
+
     pinMode(5, OUTPUT);
     pinMode(6, OUTPUT);
     pinMode(7, OUTPUT);
-    myservo.attach(A5); //서보모터 핀 설정 A5
+    myservo.attach(3); //서보모터 핀 설정 3
     myservo.write(0);
     kmg = false;
     lcd.setCursor(0, 1);
-    lcd.print("door open  ");
+    lcd.print("key");
     pinMode(3, OUTPUT);
     pinMode(piezo, OUTPUT);
     pinMode(12, INPUT);
@@ -114,7 +118,7 @@ void loop()
                 digitalWrite(5, HIGH);
                 digitalWrite(6, HIGH);
                 digitalWrite(7, HIGH);
-                off_time = millis() + 30000;
+                off_time = millis() + 10000;
                 myservo.write(0);
                 kmg = false;
                 digitalWrite(3, HIGH);
@@ -129,8 +133,8 @@ void loop()
 
             else if (key == '*')
             { // 입력값 초기화
-                 lcd.setCursor(13, 0);
-                 lcd.print("      ");
+                lcd.setCursor(13, 0);
+                lcd.print("      ");
                 for (int i = 0; i < 3; i++)
                     temp[i] = '0';
                 key = '\0'; // 입력된 '#' 삭제 - 오류방지
@@ -143,8 +147,8 @@ void loop()
     {
         if (key)
         {
-            if (key != '*' && key != '#' && doorOpen == true)
-            {   // 숫자만 입력
+            if (key != '*' && key != '#' && doorOpen == true && !kmg)
+            { // 숫자만 입력
                 // lcd.setCursor(0, 0);
                 // lcd.print("Room Number: ");
                 lcd.setCursor(0, 0);
@@ -286,7 +290,32 @@ void loop()
                 lcd.setCursor(0, 0);
                 lcd.print("Press # for 1s               ");
             }
-            if (result == "c7 71 22 19" && kmg)
+
+            if (result == "c7 71 22 19" && !kmg_first)
+            {
+                Serial.println("door open");
+                lcd.setCursor(0, 1);
+                lcd.print("door open         ");
+                digitalWrite(5, LOW);
+                digitalWrite(6, LOW);
+                digitalWrite(7, LOW);
+                myservo.write(0);
+                kmg = false;
+                doorOpen = true;
+                codeIndex = 0;
+                digitalWrite(3, LOW);
+                for (int i = 8; i >= 0; i--)
+                {
+                    tone(piezo, tones[i]);
+                    delay(50);
+                }
+                noTone(piezo);
+                delay(500);
+                lcd.setCursor(0, 0);
+                lcd.print("Press # for 1s               ");
+                kmg_first = true;
+            }
+            else if (result == "c7 71 22 19" && kmg && kmg_first)
             {
                 Serial.println("door open");
                 lcd.setCursor(0, 1);
@@ -309,7 +338,7 @@ void loop()
                 lcd.setCursor(0, 0);
                 lcd.print("Press # for 1s               ");
             }
-            else if (result == "c7 71 22 19" && !kmg)
+            else if (result == "c7 71 22 19" && !kmg && kmg_first)
             {
                 Serial.println("door open");
                 lcd.setCursor(0, 1);
@@ -358,7 +387,7 @@ void loop()
 
 void keypadEvent(KeypadEvent key)
 {
-    if (doorOpen == true)
+    if (doorOpen == true && !kmg)
     { // 문 열린 상태에서 키패드 이벤트 진입
         switch (keypad.getState())
         {
