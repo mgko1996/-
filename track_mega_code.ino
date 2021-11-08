@@ -10,6 +10,8 @@
 #define SDA_PIN 10
 #define RST_PIN 9
 
+#define RUN_TIME 10000
+
 const byte ROWS = 4; //four rows
 const byte COLS = 3; //three columns
 char keys[ROWS][COLS] = {
@@ -43,8 +45,81 @@ int tones[] = {523, 587, 659, 698, 784, 880, 988, 1046};
 
 bool kmg;
 bool kmg_first = false;
-
 unsigned long off_time = 0;
+
+void BUZZER_CLOSED()
+{
+    for (int i = 8; i >= 0; i--)
+    {
+        tone(piezo, tones[i]);
+        delay(50);
+    }
+    noTone(piezo);
+    delay(500);
+}
+
+void BUZZER_OPEN()
+{
+    for (int i = 0; i < 8; i++)
+    {
+        tone(piezo, tones[i]);
+        delay(50);
+    }
+    noTone(piezo);
+    delay(500);
+}
+
+void MOTOR_OPNE()
+{
+    for (int i = 23; i < 43; i++)
+    {
+        myservo.write(i);
+        delay((43 - i) * 5);
+    }
+    for (int i = 43; i < 140; i++)
+    {
+        myservo.write(i);
+        delay(10);
+    }
+    for (int i = 140; i <= 180; i++)
+    {
+        myservo.write(i);
+        delay((i - 140) * 5);
+    }
+}
+
+void MOTOR_CLOSED()
+{
+    for (int i = 180; i > 160; i--)
+    {
+        myservo.write(i);
+        delay((i - 160) * 5);
+    }
+    for (int i = 160; i > 63; i--)
+    {
+        myservo.write(i);
+        delay(10);
+    }
+    for (int i = 63; i >= 23; i--)
+    {
+        myservo.write(i);
+        delay((63 - i) * 5);
+    }
+}
+
+void LED_ON()
+{
+    digitalWrite(5, HIGH);
+    digitalWrite(6, HIGH);
+    digitalWrite(7, HIGH);
+}
+
+void LED_OFF()
+{
+    digitalWrite(5, LOW);
+    digitalWrite(6, LOW);
+    digitalWrite(7, LOW);
+}
 
 void setup()
 {
@@ -63,7 +138,6 @@ void setup()
     pinMode(6, OUTPUT);
     pinMode(7, OUTPUT);
     myservo.attach(3); //서보모터 핀 설정 3
-    myservo.write(0);
     kmg = false;
     lcd.setCursor(0, 1);
     lcd.print("key");
@@ -75,7 +149,6 @@ void setup()
 
 void loop()
 {
-
     char key = keypad.getKey();
     if (longPress)
     { // password 설정
@@ -96,8 +169,6 @@ void loop()
                     lcd.setCursor(0, 1);
                     lcd.print("door closed   ");
                 }
-                Serial.print("pass set key: ");
-                Serial.println(key);
                 temp[codeIndex] = key;
                 lcd.setCursor(13 + codeIndex, 0);
                 lcd.print(key);
@@ -112,23 +183,13 @@ void loop()
                 key = '\0'; // 입력된 '#' 삭제 - 오류방지
                 codeIndex = 0;
                 doorOpen = false; // 자동으로 잠기는 문 표시
-                Serial.println("set new password");
                 lcd.setCursor(0, 1);
                 lcd.print("door closed");
-                digitalWrite(5, HIGH);
-                digitalWrite(6, HIGH);
-                digitalWrite(7, HIGH);
-                off_time = millis() + 10000;
-                myservo.write(0);
+                LED_ON();
+                off_time = millis() + RUN_TIME;
                 kmg = false;
                 digitalWrite(3, HIGH);
-                for (int i = 8; i >= 0; i--)
-                {
-                    tone(piezo, tones[i]);
-                    delay(50);
-                }
-                noTone(piezo);
-                delay(500);
+                BUZZER_CLOSED();
             }
 
             else if (key == '*')
@@ -139,7 +200,6 @@ void loop()
                     temp[i] = '0';
                 key = '\0'; // 입력된 '#' 삭제 - 오류방지
                 codeIndex = 0;
-                Serial.println("CLEAR");
             }
         }
     }
@@ -149,8 +209,6 @@ void loop()
         {
             if (key != '*' && key != '#' && doorOpen == true && !kmg)
             { // 숫자만 입력
-                // lcd.setCursor(0, 0);
-                // lcd.print("Room Number: ");
                 lcd.setCursor(0, 0);
                 lcd.print("Press # for 1s             ");
                 lcd.setCursor(13, 0);
@@ -164,41 +222,23 @@ void loop()
                     lcd.setCursor(0, 1);
                     lcd.print("door closed   ");
                 }
-                Serial.print("key: ");
-                Serial.println(key);
-                // lcd.setCursor(0, 0);
-                // // lcd.print("                         ");
-                // lcd.print("Room Number: "); // 키 홀드 시간 설정 - 2000 = 2초
                 inputCode[codeIndex] = key;
-                //lcd.setCursor(13 + codeIndex, 0);
-                //lcd.print(key);
                 codeIndex++;
                 if (codeIndex == 3)
                 {
                     if (strncmp(password, inputCode, 3) == 0)
                     {
-                        Serial.println("door closed");
                         lcd.setCursor(0, 1);
                         lcd.print("door closed");
-                        digitalWrite(5, LOW);
-                        digitalWrite(6, LOW);
-                        digitalWrite(7, LOW);
-                        myservo.write(0);
+                        LED_OFF();
                         kmg = false;
                         doorOpen = false;
                         codeIndex = 0;
                         digitalWrite(3, HIGH);
-                        for (int i = 8; i >= 0; i--)
-                        {
-                            tone(piezo, tones[i]);
-                            delay(50);
-                        }
-                        noTone(piezo);
-                        delay(500);
+                        BUZZER_CLOSED();
                     }
                     else
                     {
-                        Serial.println("wrong number");
                         codeIndex = 0;
                     }
                     for (int i = 0; i < 3; i++)
@@ -207,9 +247,6 @@ void loop()
             }
             else if (key == '*')
             { // 입력값 초기화
-                //lcd.setCursor(13, 0);
-                //lcd.print("      ");
-                Serial.println("CLEAR");
                 for (int i = 0; i < 3; i++)
                     inputCode[i] = '0';
                 key = '\0'; // 입력된 '#' 삭제 - 오류방지
@@ -229,16 +266,15 @@ void loop()
             content.concat(String(rfid.uid.uidByte[i], HEX));
         }
         String result = content.substring(1);
-        Serial.println(result);
         if (doorOpen && kmg)
         {
-            myservo.write(0);
+            MOTOR_CLOSED();
             kmg = false;
             delay(300);
         }
         else if (doorOpen && !kmg)
         {
-            myservo.write(180);
+            MOTOR_OPEN();
             kmg = true;
             delay(300);
         }
@@ -246,118 +282,72 @@ void loop()
         {
             if (password[0] == '3' && password[1] == '0' && password[2] == '1' && result == "ba 6d 3d 29" && kmg)
             {
-                Serial.println("door open      ");
                 lcd.setCursor(0, 1);
                 lcd.print("door open         ");
-                digitalWrite(5, LOW);
-                digitalWrite(6, LOW);
-                digitalWrite(7, LOW);
-                myservo.write(0);
+                LED_OFF();
+                MOTOR_CLOSED();
                 kmg = false;
                 doorOpen = true;
                 codeIndex = 0;
                 digitalWrite(3, LOW);
-                for (int i = 8; i >= 0; i--)
-                {
-                    tone(piezo, tones[i]);
-                    delay(50);
-                }
-                noTone(piezo);
-                delay(500);
+                BUZZER_CLOSED();
                 lcd.setCursor(0, 0);
                 lcd.print("Press # for 1s               ");
             }
             else if (password[0] == '3' && password[1] == '0' && password[2] == '1' && result == "ba 6d 3d 29" && !kmg)
             {
-                Serial.println("door open      ");
                 lcd.setCursor(0, 1);
                 lcd.print("door open         ");
-                digitalWrite(5, LOW);
-                digitalWrite(6, LOW);
-                digitalWrite(7, LOW);
-                myservo.write(180);
+                LED_OFF();
+                MOTOR_OPNE();
                 kmg = true;
                 doorOpen = true;
                 codeIndex = 0;
                 digitalWrite(3, LOW);
-                for (int i = 0; i < 8; i++)
-                {
-                    tone(piezo, tones[i]);
-                    delay(50);
-                }
-                noTone(piezo);
-                delay(500);
+                BUZZER_CLOSED();
                 lcd.setCursor(0, 0);
                 lcd.print("Press # for 1s               ");
             }
 
             if (result == "c7 71 22 19" && !kmg_first)
             {
-                Serial.println("door open");
                 lcd.setCursor(0, 1);
                 lcd.print("door open         ");
-                digitalWrite(5, LOW);
-                digitalWrite(6, LOW);
-                digitalWrite(7, LOW);
-                myservo.write(0);
+                LED_OFF();
                 kmg = false;
                 doorOpen = true;
                 codeIndex = 0;
                 digitalWrite(3, LOW);
-                for (int i = 8; i >= 0; i--)
-                {
-                    tone(piezo, tones[i]);
-                    delay(50);
-                }
-                noTone(piezo);
-                delay(500);
+                BUZZER_CLOSED();
                 lcd.setCursor(0, 0);
                 lcd.print("Press # for 1s               ");
                 kmg_first = true;
             }
             else if (result == "c7 71 22 19" && kmg && kmg_first)
             {
-                Serial.println("door open");
                 lcd.setCursor(0, 1);
                 lcd.print("door open         ");
-                digitalWrite(5, LOW);
-                digitalWrite(6, LOW);
-                digitalWrite(7, LOW);
-                myservo.write(0);
+                LED_OFF();
+                MOTOR_CLOSED();
                 kmg = false;
                 doorOpen = true;
                 codeIndex = 0;
                 digitalWrite(3, LOW);
-                for (int i = 8; i >= 0; i--)
-                {
-                    tone(piezo, tones[i]);
-                    delay(50);
-                }
-                noTone(piezo);
-                delay(500);
+                BUZZER_CLOSED();
                 lcd.setCursor(0, 0);
                 lcd.print("Press # for 1s               ");
             }
             else if (result == "c7 71 22 19" && !kmg && kmg_first)
             {
-                Serial.println("door open");
                 lcd.setCursor(0, 1);
                 lcd.print("door open         ");
-                digitalWrite(5, LOW);
-                digitalWrite(6, LOW);
-                digitalWrite(7, LOW);
-                myservo.write(180);
+                LED_OFF();
+                MOTOR_OPNE();
                 kmg = true;
                 doorOpen = true;
                 codeIndex = 0;
                 digitalWrite(3, LOW);
-                for (int i = 0; i < 8; i++)
-                {
-                    tone(piezo, tones[i]);
-                    delay(50);
-                }
-                noTone(piezo);
-                delay(500);
+                BUZZER_OPEN();
                 lcd.setCursor(0, 0);
                 lcd.print("Press # for 1s               ");
             }
@@ -365,22 +355,20 @@ void loop()
     }
     if ((digitalRead(13) == HIGH) && doorOpen && kmg)
     {
-        myservo.write(0);
+        MOTOR_CLOSED();
         kmg = false;
         delay(300);
     }
     else if ((digitalRead(13) == HIGH) && doorOpen && !kmg)
     {
-        myservo.write(180);
+        MOTOR_OPNE();
         kmg = true;
         delay(300);
     }
 
     if (millis() > off_time)
     {
-        digitalWrite(5, LOW);
-        digitalWrite(6, LOW);
-        digitalWrite(7, LOW);
+        LED_OFF();
         off_time = 0;
     }
 }
@@ -397,7 +385,6 @@ void keypadEvent(KeypadEvent key)
                 longPress = true; // 비밀번호 변경코드 진입
                 key = '\0';       // 입력된 '#' 삭제 - 오류방지
                 codeIndex = 0;
-                Serial.println("set pass in");
                 lcd.setCursor(0, 0);
                 lcd.print("Room Number: "); // 키 홀드 시간 설정 - 2000 = 2초
                 lcd.setCursor(13, 0);
