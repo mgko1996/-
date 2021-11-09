@@ -69,7 +69,7 @@ void BUZZER_OPEN()
     delay(500);
 }
 
-void MOTOR_OPNE()
+void MOTOR_OPEN()
 {
     for (int i = 23; i < 43; i++)
     {
@@ -299,7 +299,7 @@ void loop()
                 lcd.setCursor(0, 1);
                 lcd.print("door open         ");
                 LED_OFF();
-                MOTOR_OPNE();
+                MOTOR_OPEN();
                 kmg = true;
                 doorOpen = true;
                 codeIndex = 0;
@@ -342,7 +342,7 @@ void loop()
                 lcd.setCursor(0, 1);
                 lcd.print("door open         ");
                 LED_OFF();
-                MOTOR_OPNE();
+                MOTOR_OPEN();
                 kmg = true;
                 doorOpen = true;
                 codeIndex = 0;
@@ -361,7 +361,7 @@ void loop()
     }
     else if ((digitalRead(13) == HIGH) && doorOpen && !kmg)
     {
-        MOTOR_OPNE();
+        MOTOR_OPEN();
         kmg = true;
         delay(300);
     }
